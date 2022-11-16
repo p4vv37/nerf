@@ -8,10 +8,10 @@ import json
 
 # Misc utils
 
-def img2mse(x, y): return tf.reduce_mean(tf.square(x - y))
+def img2mse(x, y): return tf.reduce_mean(tf.math.square(x - y))
 
 
-def mse2psnr(x): return -10.*tf.log(x)/tf.log(10.)
+def mse2psnr(x): return -10.*tf.math.log(x)/tf.math.log(10.)
 
 
 def to8b(x): return (255*np.clip(x, 0, 1)).astype(np.uint8)
@@ -20,6 +20,8 @@ def to8b(x): return (255*np.clip(x, 0, 1)).astype(np.uint8)
 # Positional encoding
 
 class Embedder:
+    embed_fns = None
+    out_dim = None
 
     def __init__(self, **kwargs):
 

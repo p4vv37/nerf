@@ -60,8 +60,9 @@ def _minify(basedir, factors=[], resolutions=[]):
         
         
 def _load_data(basedir, factor=None, width=None, height=None, load_imgs=True):
-    
-    poses_arr = np.load(os.path.join(basedir, 'poses_bounds.npy'))
+
+    basedir = os.path.normpath(basedir)
+    poses_arr = np.load(os.path.join(os.getcwd(), basedir, 'poses_bounds.npy'))
     poses = poses_arr[:, :-2].reshape([-1, 3, 5]).transpose([1,2,0])
     bds = poses_arr[:, -2:].transpose([1,0])
     

@@ -1,5 +1,9 @@
 import os
+
+from tensorflow.python.ops.summary_ops_v2 import record_summaries_every_n_global_steps
+
 os.environ['TF_FORCE_GPU_ALLOW_GROWTH'] = 'true'
+os.environ['KMP_DUPLICATE_LIB_OK']='True'
 
 import sys
 import tensorflow as tf
@@ -12,7 +16,6 @@ from run_nerf_helpers import *
 from load_llff import load_llff_data
 from load_deepvoxels import load_dv_data
 from load_blender import load_blender_data
-
 
 tf.compat.v1.enable_eager_execution()
 
@@ -709,8 +712,7 @@ def train():
     optimizer = tf.keras.optimizers.Adam(lrate)
     models['optimizer'] = optimizer
 
-    global_step = tf.compat.v1.train.get_or_create_global_step()
-    global_step.assign(start)
+    tf.summary.experimental.set_step(0)
 
     # Prepare raybatch tensor if batching random rays
     N_rand = args.N_rand
@@ -750,7 +752,7 @@ def train():
     print('VAL views are', i_val)
 
     # Summary writers
-    writer = tf.contrib.summary.create_file_writer(
+    writer = tf.summary.create_file_writer(
         os.path.join(basedir, 'summaries', expname))
     writer.set_as_default()
 
@@ -873,14 +875,14 @@ def train():
 
         if i % args.i_print == 0 or i < 10:
 
-            print(expname, i, psnr.numpy(), loss.numpy(), global_step.numpy())
+            print(expname, i, psnr.numpy(), loss.numpy(), tf.summary.experimental.get_step())
             print('iter time {:.05f}'.format(dt))
-            with tf.contrib.summary.record_summaries_every_n_global_steps(args.i_print):
-                tf.contrib.summary.scalar('loss', loss)
-                tf.contrib.summary.scalar('psnr', psnr)
-                tf.contrib.summary.histogram('tran', trans)
+            with record_summaries_every_n_global_steps(args.i_print):
+                tf.summary.scalar('loss', loss)
+                tf.summary.scalar('psnr', psnr)
+                tf.summary.histogram('tran', trans)
                 if args.N_importance > 0:
-                    tf.contrib.summary.scalar('psnr0', psnr0)
+                    tf.summary.scalar('psnr0', psnr0)
 
             if i % args.i_img == 0:
 
@@ -898,30 +900,35 @@ def train():
                 testimgdir = os.path.join(basedir, expname, 'tboard_val_imgs')
                 if i==0:
                     os.makedirs(testimgdir, exist_ok=True)
-                imageio.imwrite(os.path.join(testimgdir, '{:06d}.png'.format(i)), to8b(rgb))
 
-                with tf.contrib.summary.record_summaries_every_n_global_steps(args.i_img):
+                im_path = os.path.join(testimgdir, '{:06d}.png'.format(i))
+                uri_dir_name = os.path.dirname(im_path)
+                if not os.path.exists(uri_dir_name):
+                    os.makedirs(uri_dir_name)
+                imageio.imwrite(im_path, to8b(rgb))
 
-                    tf.contrib.summary.image('rgb', to8b(rgb)[tf.newaxis])
-                    tf.contrib.summary.image(
+                with record_summaries_every_n_global_steps(args.i_img):
+
+                    tf.summary.image('rgb', to8b(rgb)[tf.newaxis])
+                    tf.summary.image(
                         'disp', disp[tf.newaxis, ..., tf.newaxis])
-                    tf.contrib.summary.image(
+                    tf.summary.image(
                         'acc', acc[tf.newaxis, ..., tf.newaxis])
 
-                    tf.contrib.summary.scalar('psnr_holdout', psnr)
-                    tf.contrib.summary.image('rgb_holdout', target[tf.newaxis])
+                    tf.summary.scalar('psnr_holdout', psnr)
+                    tf.summary.image('rgb_holdout', target[tf.newaxis])
 
                 if args.N_importance > 0:
 
-                    with tf.contrib.summary.record_summaries_every_n_global_steps(args.i_img):
-                        tf.contrib.summary.image(
+                    with record_summaries_every_n_global_steps(args.i_img):
+                        tf.summary.image(
                             'rgb0', to8b(extras['rgb0'])[tf.newaxis])
-                        tf.contrib.summary.image(
+                        tf.summary.image(
                             'disp0', extras['disp0'][tf.newaxis, ..., tf.newaxis])
-                        tf.contrib.summary.image(
+                        tf.summary.image(
                             'z_std', extras['z_std'][tf.newaxis, ..., tf.newaxis])
 
-        global_step.assign_add(1)
+        tf.summary.experimental.set_step(tf.summary.experimental.get_step() + 1)
 
 
 if __name__ == '__main__':
