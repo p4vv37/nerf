@@ -5,12 +5,6 @@ from tensorflow.python.ops.summary_ops_v2 import record_summaries_every_n_global
 os.environ['TF_FORCE_GPU_ALLOW_GROWTH'] = 'true'
 os.environ['KMP_DUPLICATE_LIB_OK']='True'
 
-import sys
-import tensorflow as tf
-import numpy as np
-import imageio
-import json
-import random
 import time
 from run_nerf_helpers import *
 from load_llff import load_llff_data
@@ -565,11 +559,11 @@ def config_parser():
                         help='frequency of console printout and metric loggin')
     parser.add_argument("--i_img",     type=int, default=500,
                         help='frequency of tensorboard image logging')
-    parser.add_argument("--i_weights", type=int, default=10000,
+    parser.add_argument("--i_weights", type=int, default=1000,
                         help='frequency of weight ckpt saving')
     parser.add_argument("--i_testset", type=int, default=50000,
                         help='frequency of testset saving')
-    parser.add_argument("--i_video",   type=int, default=50000,
+    parser.add_argument("--i_video",   type=int, default=1000,
                         help='frequency of render_poses video saving')
 
     return parser

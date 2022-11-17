@@ -95,7 +95,7 @@ class BlenderDatasetGenerator:
 
         # Add passes for additionally dumping albedo and normals.
         bpy.context.scene.view_layers[
-            "View Layer"    # might need to use "RenderLayer", on different versions
+            0 #"View Layer"    # might need to use "RenderLayer", on different versions
         ].use_pass_normal = (
             include_depth_normals
         )
@@ -234,7 +234,7 @@ class BlenderDatasetGenerator:
             self.generate_data_split(split, num_images, include_depth_normal)
 
     @classmethod
-    def generate(cls, dataset_params=None, results_path):
+    def generate(cls, results_path, dataset_params=None):
         "Class-method equivalent of generate_dataset()."
         data_synthesizer = cls(dataset_params)
         data_synthesizer.generate_dataset(results_path)
@@ -243,5 +243,5 @@ class BlenderDatasetGenerator:
 # This is what we would actually call in Blender (or as an external script)
 if __name__ == "__main__":
     # give the absolute path to the folder where you want the dataset saved
-    path = "results"
+    path = "C:/projects/rendering/nerf/data/blender_test"
     BlenderDatasetGenerator.generate(results_path=path)
