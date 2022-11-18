@@ -148,7 +148,7 @@ def render_rays(ray_batch,
 
         # Disparity map is inverse depth.
         disp_map = 1./tf.maximum(1e-10, depth_map /
-                                 tf.reduce_sum(weights, axis=-1))
+                                 tf.maximum(1e-10, tf.reduce_sum(weights, axis=-1)))
 
         # Sum of weights along each ray. This value is in [0, 1] up to numerical error.
         acc_map = tf.reduce_sum(weights, -1)
@@ -328,6 +328,7 @@ def render(H, W, focal,
         all_ret[k] = tf.reshape(all_ret[k], k_sh)
 
     k_extract = ['rgb_map', 'disp_map', 'acc_map']
+    print("k:", all_ret.keys())
     ret_list = [all_ret[k] for k in k_extract]
     ret_dict = {k: all_ret[k] for k in all_ret if k not in k_extract}
     return ret_list + [ret_dict]
